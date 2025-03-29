@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Demo Asistente de Voz IA</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff3f6;
+      padding: 2rem;
+      text-align: center;
+    }
+    #response {
+      margin-top: 20px;
+      padding: 1rem;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: inline-block;
+      max-width: 600px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      background-color: #d6336c;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎙️ Demo Asistente de Voz IA</h1>
+  <p>Presioná el botón y hablá. El asistente te responderá con voz real.</p>
+  <button onclick="startRecognition()">🎤 Hablar</button>
+  <div id="response">Esperando tu mensaje...</div>
+
+  <script>
+    const apiKey = "sk_c6cce4fb5d36f65c51d6de9cccbb687ff6834f1da80a287d";
+
+    function startRecognition() {
+      const recognition = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'es-ES';
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const texto = event.results[0][0].transcript;
+        document.getElementById("response").innerText = "Dijiste: " + texto;
+
+        // Enviar texto a ElevenLabs como respuesta simple
+        const textoRespuesta = "Hola, gracias por tu mensaje. Estoy aquí para ayudarte.";
+
+        fetch("https://api.elevenlabs.io/v1/text-to-speech/pNInz6obpgDQGcFmaJgB/stream", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "xi-api-key": apiKey
+          },
+          body: JSON.stringify({
+            text: textoRespuesta,
+            model_id: "eleven_monolingual_v1",
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.5
+            }
+          })
+        })
+        .then(response => response.blob())
+        .then(blob => {
+          const audio = new Audio(URL.createObjectURL(blob));
+          audio.play();
+        })
+        .catch(error => console.error("Error al reproducir la voz:", error));
+      };
+
+      recognition.onerror = function(event) {
+        document.getElementById("response").innerText = "Error al reconocer voz: " + event.error;
+      };
+    }
+  </script>
+</body>
+</html>
